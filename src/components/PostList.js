@@ -1,7 +1,6 @@
 import Post from "./Post";
 import { useQuery } from "@tanstack/react-query";
 import { getPosts, getPostsByUsername } from "../api/api";
-import { PostListDiv } from "../styles/PostList";
 import { FEED_VARIANT } from "../values";
 
 //  데이터가 fresh 상태라면 캐시에 저장된 데이터를 리턴하고 끝이지만, 데이터가 stale 상태라면 백그라운드에서 refetch를 진행한다.
@@ -40,19 +39,30 @@ function PostList({ variant = FEED_VARIANT.HOME_FEED }) {
     console.log("Invalid feed request");
   }
 
-  const { data: postsData } = useQuery({
+  // pending = 로딩, error = 에러 객체를 가져와 로딩 화면 및 에러 화면을 구성할 수 있다.
+  const {
+    data: postsData,
+    isPending,
+    isError,
+  } = useQuery({
     queryKey: postsQueryKey,
     queryFn: postsQueryFn,
+    // 에러가 발생했을 떄, Default는 3번, 0으로 줄여 에러화면을 빨리 볼 수 있다.
+    retry: 0,
   });
+
+  if (isPending) return "로딩 중입니다.";
+
+  if (isError) return "에러가 발생했습니다.";
 
   const posts = postsData?.results ?? [];
 
   return (
-    <PostListDiv>
+    <div>
       {posts.map((post) => (
         <Post key={post.id} post={post} />
       ))}
-    </PostListDiv>
+    </div>
   );
 }
 

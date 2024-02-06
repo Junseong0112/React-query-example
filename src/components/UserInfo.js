@@ -1,12 +1,12 @@
-import ProfilePhoto from "./ProfilePhoto";
-import { UserInfoDiv, UserNameDiv } from "../styles/UserInfo";
+import ProfilePhoto from './ProfilePhoto';
+import styles from './UserInfo.module.css';
 
 function UserInfo({ name, photo }) {
   return (
-    <UserInfoDiv>
+    <div className={styles.userInfo}>
       <ProfilePhoto photo={photo} name={name} />
-      <UserNameDiv>{name}</UserNameDiv>
-    </UserInfoDiv>
+      <div className={styles.userName}>{name}</div>
+    </div>
   );
 }
 

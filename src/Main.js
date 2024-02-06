@@ -4,14 +4,12 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import App from "./components/App";
 import HomePage from "./pages/HomePage";
 import MyFeedPage from "./pages/MyFeedPage";
-import { GlobalStyle } from "./styles/Main";
 
 const queryClient = new QueryClient();
 
 function Main() {
   return (
     <QueryClientProvider client={queryClient}>
-      <GlobalStyle />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<App />}>
