@@ -1,11 +1,16 @@
 import Post from "./Post";
-import { useQuery } from "@tanstack/react-query";
-import { getPosts, getPostsByUsername } from "../api/api";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { getPosts, getPostsByUsername, uploadPost } from "../api/api";
 import { FEED_VARIANT } from "../values";
+import LoadingPage from "../pages/LoadingPage";
+import ErrorPage from "../pages/ErrorPage";
 
 //  데이터가 fresh 상태라면 캐시에 저장된 데이터를 리턴하고 끝이지만, 데이터가 stale 상태라면 백그라운드에서 refetch를 진행한다.
 
 function PostList({ variant = FEED_VARIANT.HOME_FEED }) {
+  const [content, setContent] = useState("");
+
   // // 구조분해를 이용해서 data : postsData라는 이름으로 지정하여 값을 추출
   // const { data: postsData } = useQuery({
   //   queryKey: ["posts"],
@@ -22,7 +27,6 @@ function PostList({ variant = FEED_VARIANT.HOME_FEED }) {
   //   queryKey: ["posts", username],
   //   queryFn: () => getPostsByUsername(username),
   // });
-  // console.log(postsDataByUsername);
 
   // values 값에 따른 쿼리 값
   let postsQueryKey;
@@ -50,19 +54,49 @@ function PostList({ variant = FEED_VARIANT.HOME_FEED }) {
     // 에러가 발생했을 떄, Default는 3번, 0으로 줄여 에러화면을 빨리 볼 수 있다.
     retry: 0,
   });
+  // 사이드 이펙트(수정, 삭제, 추가)가 발생할 때, 뮤테이션 함수를 직접 실행시ㅋ줘야 백엔드 데이터를 실제로 수정할 수 있게 된다.
+  const uploadPostMutation = useMutation({
+    mutationFn: (newPost) => uploadPost(newPost),
+  });
 
-  if (isPending) return "로딩 중입니다.";
+  const handleInputChange = (e) => {
+    setContent(e.target.value);
+  };
 
-  if (isError) return "에러가 발생했습니다.";
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const newPost = { username: "query", content };
+    uploadPostMutation.mutate(newPost);
+    setContent("");
+  };
+
+  // 로딩중일때 로딩페이지 리턴
+  if (isPending) return <LoadingPage />;
+  // 에러 발생시 에러페이지 리턴
+  if (isError) return <ErrorPage />;
 
   const posts = postsData?.results ?? [];
 
   return (
-    <div>
-      {posts.map((post) => (
-        <Post key={post.id} post={post} />
-      ))}
-    </div>
+    <>
+      <div>
+        <form onSubmit={handleSubmit}>
+          <textarea
+            name="content"
+            value={content}
+            onChange={handleInputChange}
+          />
+          <button disabled={!content} type="submit">
+            업로드
+          </button>
+        </form>
+      </div>
+      <div>
+        {posts.map((post) => (
+          <Post key={post.id} post={post} />
+        ))}
+      </div>
+    </>
   );
 }
 
