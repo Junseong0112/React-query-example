@@ -1,14 +1,19 @@
+import { useContext } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { LoginContext } from "../context/LoginContext";
 import "react-toastify/dist/ReactToastify.css";
 import styles from "./PostForm.module.css";
 import TextInputForm from "./TextInputForm";
+import { QUERY_KEYS } from "../values";
 
 function PostForm({ onSubmit, buttonDisabled }) {
-  const currentUserInfo = {
-    username: "query",
-    name: "쿼리",
-    photo:
-      "https://learn-codeit-kr-static.s3.ap-northeast-2.amazonaws.com/codestudit/003.png",
-  };
+  const { currentUsername } = useContext(LoginContext);
+  const queryClient = useQueryClient();
+
+  const currentUserInfo = queryClient.getQueryData([
+    QUERY_KEYS.USER_INFO,
+    currentUsername,
+  ]);
 
   const handleSubmit = async (content) => {
     const newPost = {

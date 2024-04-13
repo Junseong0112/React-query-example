@@ -25,3 +25,8 @@ export async function uploadPost(newPost) {
 
   return await response.json();
 }
+// 유저 데이터 받아오는 api
+export async function getUserInfo(username) {
+  const response = await fetch(`${BASE_URL}/users/${username}`);
+  return await response.json();
+}

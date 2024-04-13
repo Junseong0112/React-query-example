@@ -1,16 +1,19 @@
+import { useContext } from "react";
 import { toast } from "react-toastify";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPosts, getPostsByUsername, uploadPost } from "../api/api";
-import { FEED_VARIANT } from "../values";
+import { FEED_VARIANT, QUERY_KEYS } from "../values";
 import LoadingPage from "../pages/LoadingPage";
 import ErrorPage from "../pages/ErrorPage";
 import styles from "./PostList.module.css";
 import Post from "./Post";
 import PostForm from "./PostForm";
+import { LoginContext } from "../context/LoginContext";
 
 //  데이터가 fresh 상태라면 캐시에 저장된 데이터를 리턴하고 끝이지만, 데이터가 stale 상태라면 백그라운드에서 refetch를 진행한다.
 
 function PostList({ variant = FEED_VARIANT.HOME_FEED, showPostForm }) {
+  const { currentUsername } = useContext(LoginContext);
   // 캐시에 저장된 쿼리를 무효화하기 위해, stale time의 개요 없이 stale 상태로 만들고, 해당 데이터를 백그라운드에서 refetch하게 만들 수 있게한다.
   const queryClient = useQueryClient();
 
@@ -36,12 +39,11 @@ function PostList({ variant = FEED_VARIANT.HOME_FEED, showPostForm }) {
   let postsQueryFn;
 
   if (variant === FEED_VARIANT.HOME_FEED) {
-    postsQueryKey = ["posts"];
+    postsQueryKey = [QUERY_KEYS.POSTS];
     postsQueryFn = getPosts;
   } else if (variant === FEED_VARIANT.MY_FEED) {
-    const username = "query";
-    postsQueryKey = ["posts", username];
-    postsQueryFn = () => getPostsByUsername(username);
+    postsQueryKey = [QUERY_KEYS.POSTS, currentUsername];
+    postsQueryFn = () => getPostsByUsername(currentUsername);
   } else {
     console.log("Invalid feed request");
   }
@@ -54,6 +56,7 @@ function PostList({ variant = FEED_VARIANT.HOME_FEED, showPostForm }) {
   } = useQuery({
     queryKey: postsQueryKey,
     queryFn: postsQueryFn,
+    staleTime: 60 * 1000,
     // 에러가 발생했을 떄, Default는 3번, 0으로 줄여 에러화면을 빨리 볼 수 있다.
     retry: 0,
   });
@@ -62,7 +65,7 @@ function PostList({ variant = FEED_VARIANT.HOME_FEED, showPostForm }) {
     mutationFn: (newPost) => uploadPost(newPost),
     //  성공한 시점에서 posts 쿼리의 데이터를 자동으로 refetch하게끔 만든다.
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.POSTS] });
     },
   });
 
@@ -86,6 +89,7 @@ function PostList({ variant = FEED_VARIANT.HOME_FEED, showPostForm }) {
 
   return (
     <div className={styles.postList}>
+      {/* my-feed 페이지에서만 보이게 */}
       {showPostForm ? (
         <PostForm
           onSubmit={handleUploadPost}
